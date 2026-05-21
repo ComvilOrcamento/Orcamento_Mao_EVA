@@ -44,9 +44,6 @@
 <div class="container">
     <h1>Orçamento - Mão de Torcida</h1>
 
-    <!-- CAMPO OCULTO ATUALIZADO: Alterado de valorFixo para valorStart conforme solicitado -->
-    <input type="hidden" id="valorStart" value="0.00">
-
     <h2>Dados do cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
         <label>Nome *</label>
@@ -100,6 +97,9 @@
             <input type="number" id="qtdManual" min="1" placeholder="Ex: 750">
         </div>
     </div>
+
+    <!-- ADICIONADO: Campo oculto mapeado estruturalmente para Valor de Start -->
+    <input type="hidden" id="valorStartMao" value="0">
 
     <h2>Dados de Atendimento</h2>
     <div class="row">
@@ -184,10 +184,7 @@ const bancoReservaMao = {
   ],
   "coresEva": [
     { "nome": "Azul Comercial", "preco": 0.00 },
-    { "nome": "Vermelho", "preco": 0.00 },
-    { "nome": "Amarelo", "preco": 0.00 },
-    { "nome": "Preto", "preco": 0.00 },
-    { "nome": "Branco", "preco": 0.00 }
+    { "nome": "Vermelho", "preco": 0.00 }
   ]
 };
 
@@ -203,16 +200,16 @@ window.onload = function() {
                 objImgMinha.src = database.logoEmpresa;
                 document.getElementById('img-minha-preview').src = database.logoEmpresa;
             }
-            // Sincroniza a propriedade valorStartMao do json para o campo oculto unificado
+            // Sincroniza o valor de start vindo do arquivo de dados com o input oculto
             if(database.valorStartMao !== undefined) {
-                document.getElementById('valorStart').value = parseFloat(database.valorStartMao || 0).toFixed(2);
+                document.getElementById('valorStartMao').value = database.valorStartMao;
             }
             carregarMenusMao(); 
         })
         .catch(err => { 
             console.warn("Utilizando banco reserva integrado.");
             database = JSON.parse(JSON.stringify(bancoReservaMao));
-            document.getElementById('valorStart').value = parseFloat(database.valorStartMao || 0).toFixed(2);
+            document.getElementById('valorStartMao').value = database.valorStartMao;
             carregarMenusMao(); 
         });
 };
@@ -247,13 +244,11 @@ function formatarMoeda(valor) {
 }
 
 function calcularValoresAtuais() {
-    const selectModelElement = document.getElementById("selectModeloMao");
-    const idModeloSelected = selectModelElement ? parseInt(selectModelElement.value) : 0;
-    const radioChecked = document.querySelector('input[name="tipoMao"]:checked');
-    const tipoMao = radioChecked ? radioChecked.value : "Luva";
-    const selectCorElement = document.getElementById("selectCoresImpressao");
-    const coresImpressao = selectCorElement ? selectCorElement.value : "";
+    const idModeloSelected = parseInt(document.getElementById("selectModeloMao").value) || 0;
+    const tipoMao = document.querySelector('input[name="tipoMao"]:checked').value;
+    const coresImpressao = document.getElementById("selectCoresImpressao").value;
     const selectQtd = document.getElementById("selectQuantidade").value;
+    const valorStart = parseFloat(document.getElementById("valorStartMao").value) || 0;
     
     let qtd = 500;
     if (selectQtd === "Variavel") {
@@ -272,14 +267,15 @@ function calcularValoresAtuais() {
         precoCorAdicional = parseFloat(corEncontrada.preco || 0);
     }
 
-    // Resgata com segurança o preço operacional injetado do Valor de Start
-    let valorDeStartInjetado = parseFloat(document.getElementById('valorStart').value) || 0;
-
-    // Fórmula: (Custo de Insumos Unitários * Quantidade) + Taxa Operacional de Start
-    let custoTotalFinalDoLote = ((precoModeloBase + precoCorAdicional) * qtd) + valorDeStartInjetado;
+    // MODIFICADO: Formula de calculo unificada exata de acordo com o pedido
+    // (Modelo + Cores) * quantidade = A
+    let subtotalA = (precoModeloBase + precoCorAdicional) * qtd;
     
-    // Aplicação estrita da margem de 70% de lucro empresarial da Comvil Brindes
-    let totalLoteComMargemLucro = custoTotalFinalDoLote * 1.70; 
+    // Se for Argola unifica multiplicando por 1, se for Luva unifica multiplicando por 2
+    let multiplicadorTipo = (tipoMao === "Luva") ? 2 : 1;
+    
+    // A * multiplicador + valor de Start
+    let totalLoteComMargemLucro = (subtotalA * multiplicadorTipo) + valorStart; 
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
     
     return { 
@@ -464,7 +460,6 @@ function abrirImagemNovaAba() {
     }
 }
 
-// CAIXA DE DESENHO DO RELATÓRIO DO CANVAS
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
