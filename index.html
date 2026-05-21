@@ -44,8 +44,8 @@
 <div class="container">
     <h1>Orçamento - Mão de Torcida</h1>
 
-    <!-- CAMPO DE PREÇO FIXO OCULTO NO GERADOR -->
-    <input type="hidden" id="precoFixoOculto" value="0.00">
+    <!-- CAMPO OCULTO ATUALIZADO: Alterado de valorFixo para valorStart conforme solicitado -->
+    <input type="hidden" id="valorStart" value="0.00">
 
     <h2>Dados do cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
@@ -139,6 +139,7 @@
 <script>
 let database = { 
     logoEmpresa: "",
+    valorStartMao: 0.00,
     modelosMao: [], 
     coresEva: []
 };
@@ -176,13 +177,17 @@ function verificarQuantidadeVariavel(select) {
 
 const bancoReservaMao = {
   "logoEmpresa": "",
+  "valorStartMao": 150.00,
   "modelosMao": [
     { "id": 1, "nome": "Mão de E.V.A - Modelo Tradicional 40cm", "precoBase": 2.50 },
     { "id": 2, "nome": "Mão de E.V.A - Modelo Dedão Positivo 45cm", "precoBase": 2.80 }
   ],
   "coresEva": [
     { "nome": "Azul Comercial", "preco": 0.00 },
-    { "nome": "Vermelho", "preco": 0.00 }
+    { "nome": "Vermelho", "preco": 0.00 },
+    { "nome": "Amarelo", "preco": 0.00 },
+    { "nome": "Preto", "preco": 0.00 },
+    { "nome": "Branco", "preco": 0.00 }
   ]
 };
 
@@ -198,11 +203,16 @@ window.onload = function() {
                 objImgMinha.src = database.logoEmpresa;
                 document.getElementById('img-minha-preview').src = database.logoEmpresa;
             }
+            // Sincroniza a propriedade valorStartMao do json para o campo oculto unificado
+            if(database.valorStartMao !== undefined) {
+                document.getElementById('valorStart').value = parseFloat(database.valorStartMao || 0).toFixed(2);
+            }
             carregarMenusMao(); 
         })
         .catch(err => { 
             console.warn("Utilizando banco reserva integrado.");
             database = JSON.parse(JSON.stringify(bancoReservaMao));
+            document.getElementById('valorStart').value = parseFloat(database.valorStartMao || 0).toFixed(2);
             carregarMenusMao(); 
         });
 };
@@ -245,9 +255,6 @@ function calcularValoresAtuais() {
     const coresImpressao = selectCorElement ? selectCorElement.value : "";
     const selectQtd = document.getElementById("selectQuantidade").value;
     
-    // Leitura do campo oculto de preço fixo
-    const precoFixoOculto = parseFloat(document.getElementById("precoFixoOculto").value) || 0;
-    
     let qtd = 500;
     if (selectQtd === "Variavel") {
         qtd = parseInt(document.getElementById("qtdManual").value) || 1;
@@ -265,9 +272,14 @@ function calcularValoresAtuais() {
         precoCorAdicional = parseFloat(corEncontrada.preco || 0);
     }
 
-    // Soma o preço fixo oculto ao total final do lote
-    let custoTotalFinalDoLote = ((precoModeloBase + precoCorAdicional) * qtd) + precoFixoOculto;
-    let totalLoteComMargemLucro = custoTotalFinalDoLote; 
+    // Resgata com segurança o preço operacional injetado do Valor de Start
+    let valorDeStartInjetado = parseFloat(document.getElementById('valorStart').value) || 0;
+
+    // Fórmula: (Custo de Insumos Unitários * Quantidade) + Taxa Operacional de Start
+    let custoTotalFinalDoLote = ((precoModeloBase + precoCorAdicional) * qtd) + valorDeStartInjetado;
+    
+    // Aplicação estrita da margem de 70% de lucro empresarial da Comvil Brindes
+    let totalLoteComMargemLucro = custoTotalFinalDoLote * 1.70; 
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
     
     return { 
@@ -398,7 +410,7 @@ function abrirImagemNovaAba() {
     startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
     wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
     
-    let nomeAssinaturaVendedor = sellerName || 'Equipe Comercial Comvil';
+    let nomeAssinaturaVendedor = vendedor || 'Equipe Comercial Comvil';
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + nomeAssinaturaVendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
     
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
@@ -452,6 +464,7 @@ function abrirImagemNovaAba() {
     }
 }
 
+// CAIXA DE DESENHO DO RELATÓRIO DO CANVAS
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
