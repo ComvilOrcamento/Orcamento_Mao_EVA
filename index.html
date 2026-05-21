@@ -62,7 +62,6 @@
     
     <div class="row">
         <div class="field">
-            <!-- CORRIGIDO: Alterado o texto do rótulo para Tipo comercial -->
             <label>Tipo *</label>
             <div class="radio-group">
                 <label class="radio-option">
@@ -74,7 +73,7 @@
             </div>
         </div>
         <div class="field">
-            <label>Cor do E.V.A *</label>
+            <label>Cor do E.V.A (Cores de Impressão) *</label>
             <select id="selectCorEva"></select>
         </div>
     </div>
@@ -178,7 +177,7 @@ const bancoReservaMao = {
     { "id": 1, "nome": "Mão de E.V.A - Modelo Tradicional 40cm", "precoBase": 2.50 },
     { "id": 2, "nome": "Mão de E.V.A - Modelo Dedão Positivo 45cm", "precoBase": 2.80 }
   ],
-  "coresEva": ["Azul Comercial", "Vermelho", "Verde", Amarelo, "Preto", "Branco"]
+  "coresEva": ["Azul Comercial", "Vermelho", "Verde", "Amarelo", "Preto", "Branco"]
 };
 
 window.onload = function() {
@@ -231,9 +230,12 @@ function formatarMoeda(valor) {
 }
 
 function calcularValoresAtuais() {
-    const idModeloSelected = parseInt(document.getElementById("selectModeloMao").value);
-    const tipoMao = document.querySelector('input[name="tipoMao"]:checked').value;
-    const corEva = document.getElementById("selectCorEva").value;
+    const selectModelElement = document.getElementById("selectModeloMao");
+    const idModeloSelected = selectModelElement ? parseInt(selectModelElement.value) : 0;
+    const radioChecked = document.querySelector('input[name="tipoMao"]:checked');
+    const tipoMao = radioChecked ? radioChecked.value : "Luva";
+    const selectCorElement = document.getElementById("selectCorEva");
+    const corEva = selectCorElement ? selectCorElement.value : "";
     const selectQtd = document.getElementById("selectQuantidade").value;
     
     let qtd = 500;
@@ -243,7 +245,7 @@ function calcularValoresAtuais() {
         qtd = parseInt(selectQtd);
     }
     
-    let modeloEncontrado = database.modelosMao.find(m => m.id === idModeloSelected);
+    let modeloEncontrado = (database.modelosMao || []).find(m => m.id === idModeloSelected);
     let precoModeloBase = modeloEncontrado ? parseFloat(modeloEncontrado.precoBase || 0) : 0;
     let detalhesBase = modeloEncontrado ? modeloEncontrado.nome : 'Nenhum modelo';
     
