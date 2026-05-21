@@ -73,7 +73,6 @@
             </div>
         </div>
         <div class="field">
-            <!-- MODIFICADO: Alterado de Cor do E.V.A para Cores de Impressão -->
             <label>Cores de Impressão *</label>
             <select id="selectCoresImpressao"></select>
         </div>
@@ -178,7 +177,10 @@ const bancoReservaMao = {
     { "id": 1, "nome": "Mão de E.V.A - Modelo Tradicional 40cm", "precoBase": 2.50 },
     { "id": 2, "nome": "Mão de E.V.A - Modelo Dedão Positivo 45cm", "precoBase": 2.80 }
   ],
-  "coresEva": ["Azul Comercial", "Vermelho", "Verde", "Amarelo", "Preto", "Branco"]
+  "coresEva": [
+    { "nome": "Azul Comercial", "preco": 0.00 },
+    { "nome": "Vermelho", "preco": 0.00 }
+  ]
 };
 
 window.onload = function() {
@@ -214,14 +216,15 @@ function carregarMenusMao() {
         });
     }
 
-    // MODIFICADO: Continua preenchendo a partir de coresEva do json, mas alimenta o seletor rebatizado
     const corSel = document.getElementById("selectCoresImpressao");
     corSel.innerHTML = '';
     if(database.coresEva) {
         database.coresEva.forEach((cor) => {
             let opt = document.createElement("option");
-            opt.value = cor;
-            opt.text = cor; 
+            // Se o dados do json for objeto carregará a propriedade .nome, senão lê a string direta
+            let nomeCor = typeof cor === 'object' ? cor.nome : cor;
+            opt.value = nomeCor;
+            opt.text = nomeCor; 
             corSel.add(opt);
         });
     }
@@ -251,7 +254,14 @@ function calcularValoresAtuais() {
     let precoModeloBase = modeloEncontrado ? parseFloat(modeloEncontrado.precoBase || 0) : 0;
     let detalhesBase = modeloEncontrado ? modeloEncontrado.nome : 'Nenhum modelo';
     
-    let custoTotalFinalDoLote = precoModeloBase * qtd;
+    // Varre para encontrar o preço específico atrelado ao campo de cores se for objeto
+    let precoCorAdicional = 0;
+    let corEncontrada = (database.coresEva || []).find(c => (typeof c === 'object' ? c.nome : c) === coresImpressao);
+    if(corEncontrada && typeof corEncontrada === 'object') {
+        precoCorAdicional = parseFloat(corEncontrada.preco || 0);
+    }
+
+    let custoTotalFinalDoLote = (precoModeloBase + precoCorAdicional) * qtd;
     let totalLoteComMargemLucro = custoTotalFinalDoLote; 
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
     
@@ -360,7 +370,6 @@ function abrirImagemNovaAba() {
     ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
     if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
     
-    // MODIFICADO: Impressão da especificação rebatizada no Canvas exportável
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e estampa:", 50, 324); ctx.font = "11px Arial";
     ctx.fillText("• Tipo: " + dadosComerciais.tipoMao + "  |  • Cores de Impressão: " + dadosComerciais.coresImpressao, 50, 338);
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
