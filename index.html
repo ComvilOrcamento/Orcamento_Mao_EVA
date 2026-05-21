@@ -62,13 +62,14 @@
     
     <div class="row">
         <div class="field">
-            <label>Tipo de Encaixe *</label>
+            <!-- CORRIGIDO: Alterado o texto do rótulo para Tipo comercial -->
+            <label>Tipo *</label>
             <div class="radio-group">
                 <label class="radio-option">
-                    <input type="radio" name="tipoEncaixe" value="Luva" checked> Luva
+                    <input type="radio" name="tipoMao" value="Luva" checked> Luva
                 </label>
                 <label class="radio-option">
-                    <input type="radio" name="tipoEncaixe" value="Argola"> Argola
+                    <input type="radio" name="tipoMao" value="Argola"> Argola
                 </label>
             </div>
         </div>
@@ -177,7 +178,7 @@ const bancoReservaMao = {
     { "id": 1, "nome": "Mão de E.V.A - Modelo Tradicional 40cm", "precoBase": 2.50 },
     { "id": 2, "nome": "Mão de E.V.A - Modelo Dedão Positivo 45cm", "precoBase": 2.80 }
   ],
-  "coresEva": ["Azul Comercial", "Vermelho", "Verde", "Amarelo", "Preto", "Branco"]
+  "coresEva": ["Azul Comercial", "Vermelho", "Verde", Amarelo, "Preto", "Branco"]
 };
 
 window.onload = function() {
@@ -231,7 +232,7 @@ function formatarMoeda(valor) {
 
 function calcularValoresAtuais() {
     const idModeloSelected = parseInt(document.getElementById("selectModeloMao").value);
-    const tipoEncaixe = document.querySelector('input[name="tipoEncaixe"]:checked').value;
+    const tipoMao = document.querySelector('input[name="tipoMao"]:checked').value;
     const corEva = document.getElementById("selectCorEva").value;
     const selectQtd = document.getElementById("selectQuantidade").value;
     
@@ -246,7 +247,6 @@ function calcularValoresAtuais() {
     let precoModeloBase = modeloEncontrado ? parseFloat(modeloEncontrado.precoBase || 0) : 0;
     let detalhesBase = modeloEncontrado ? modeloEncontrado.nome : 'Nenhum modelo';
     
-    // Espaço estruturado para acoplar as fórmulas futuras
     let custoTotalFinalDoLote = precoModeloBase * qtd;
     let totalLoteComMargemLucro = custoTotalFinalDoLote; 
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
@@ -256,7 +256,7 @@ function calcularValoresAtuais() {
         qtd, 
         total: totalLoteComMargemLucro, 
         detalhesBase, 
-        tipoEncaixe, 
+        tipoMao, 
         corEva
     };
 }
@@ -280,7 +280,7 @@ function gerarVisualizacaoTela() {
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + numeroFinal;
 
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Modelo:</strong> ${dadosComerciais.detalhesBase}<br><strong>Encaixe:</strong> ${dadosComerciais.tipoEncaixe} | <strong>Cor do E.V.A:</strong> ${dadosComerciais.corEva}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Modelo:</strong> ${dadosComerciais.detalhesBase}<br><strong>Tipo:</strong> ${dadosComerciais.tipoMao} | <strong>Cor do E.V.A:</strong> ${dadosComerciais.corEva}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
     let textoContatoVendedor = telVendedor ? ` | 📞 Vendedor: ${telVendedor}` : '';
@@ -356,7 +356,7 @@ function abrirImagemNovaAba() {
     ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
     if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e estampa:", 50, 324); ctx.font = "11px Arial";
-    ctx.fillText("• Tipo de Encaixe: " + dadosComerciais.tipoEncaixe + "  |  • Cor do E.V.A: " + dadosComerciais.corEva, 50, 338);
+    ctx.fillText("• Tipo: " + dadosComerciais.tipoMao + "  |  • Cor do E.V.A: " + dadosComerciais.corEva, 50, 338);
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
