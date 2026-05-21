@@ -18,6 +18,11 @@
         input:focus, select:focus { border-color: #0056b3; }
         input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
         
+        /* ESTILO DOS BOTÕES DE ENCAIXE */
+        .radio-group { display: flex; gap: 20px; align-items: center; height: 38px; }
+        .radio-option { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #333; cursor: pointer; }
+        .radio-option input { width: auto; height: auto; cursor: pointer; }
+
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         
@@ -59,10 +64,14 @@
     <div class="row">
         <div class="field">
             <label>Tipo de Encaixe *</label>
-            <select id="selectTipoEncaixe">
-                <option value="Luva">Luva</option>
-                <option value="Argola">Argola</option>
-            </select>
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="tipoEncaixe" value="Luva" checked> Luva
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="tipoEncaixe" value="Argola"> Argola
+                </label>
+            </div>
         </div>
         <div class="field">
             <label>Cor do E.V.A *</label>
@@ -205,6 +214,7 @@ function carregarMenusMao() {
         });
     }
 
+    // CARREGA AS CORES DINAMICAMENTE DO DADOS.JSON
     const corSel = document.getElementById("selectCorEva");
     corSel.innerHTML = '';
     if(database.coresEva) {
@@ -223,7 +233,7 @@ function formatarMoeda(valor) {
 
 function calcularValoresAtuais() {
     const idModeloSelected = parseInt(document.getElementById("selectModeloMao").value);
-    const tipoEncaixe = document.getElementById("selectTipoEncaixe").value;
+    const tipoEncaixe = document.querySelector('input[name="tipoEncaixe"]:checked').value;
     const corEva = document.getElementById("selectCorEva").value;
     const selectQtd = document.getElementById("selectQuantidade").value;
     
@@ -238,7 +248,6 @@ function calcularValoresAtuais() {
     let precoModeloBase = modeloEncontrado ? parseFloat(modeloEncontrado.precoBase || 0) : 0;
     let detalhesBase = modeloEncontrado ? modeloEncontrado.nome : 'Nenhum modelo';
     
-    // Espaço reservado para as regras matemáticas futuras
     let custoTotalFinalDoLote = precoModeloBase * qtd;
     let totalLoteComMargemLucro = custoTotalFinalDoLote; 
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
