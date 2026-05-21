@@ -98,7 +98,6 @@
         </div>
     </div>
 
-    <!-- ADICIONADO: Campo oculto mapeado estruturalmente para Valor de Start -->
     <input type="hidden" id="valorStartMao" value="0">
 
     <h2>Dados de Atendimento</h2>
@@ -200,7 +199,6 @@ window.onload = function() {
                 objImgMinha.src = database.logoEmpresa;
                 document.getElementById('img-minha-preview').src = database.logoEmpresa;
             }
-            // Sincroniza o valor de start vindo do arquivo de dados com o input oculto
             if(database.valorStartMao !== undefined) {
                 document.getElementById('valorStartMao').value = database.valorStartMao;
             }
@@ -267,15 +265,13 @@ function calcularValoresAtuais() {
         precoCorAdicional = parseFloat(corEncontrada.preco || 0);
     }
 
-    // MODIFICADO: Formula de calculo unificada exata de acordo com o pedido
     // (Modelo + Cores) * quantidade = A
     let subtotalA = (precoModeloBase + precoCorAdicional) * qtd;
-    
-    // Se for Argola unifica multiplicando por 1, se for Luva unifica multiplicando por 2
     let multiplicadorTipo = (tipoMao === "Luva") ? 2 : 1;
     
-    // A * multiplicador + valor de Start
-    let totalLoteComMargemLucro = (subtotalA * multiplicadorTipo) + valorStart; 
+    // MODIFICADO: Aplicado o acréscimo de 70% de lucro sobre o custo bruto final do pedido
+    let custoTotalBruto = (subtotalA * multiplicadorTipo) + valorStart;
+    let totalLoteComMargemLucro = custoTotalBruto * 1.70; 
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
     
     return { 
