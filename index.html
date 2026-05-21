@@ -44,6 +44,9 @@
 <div class="container">
     <h1>Orçamento - Mão de Torcida</h1>
 
+    <!-- CAMPO DE PREÇO FIXO OCULTO NO GERADOR -->
+    <input type="hidden" id="precoFixoOculto" value="0.00">
+
     <h2>Dados do cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
         <label>Nome *</label>
@@ -221,7 +224,6 @@ function carregarMenusMao() {
     if(database.coresEva) {
         database.coresEva.forEach((cor) => {
             let opt = document.createElement("option");
-            // Se o dados do json for objeto carregará a propriedade .nome, senão lê a string direta
             let nomeCor = typeof cor === 'object' ? cor.nome : cor;
             opt.value = nomeCor;
             opt.text = nomeCor; 
@@ -243,6 +245,9 @@ function calcularValoresAtuais() {
     const coresImpressao = selectCorElement ? selectCorElement.value : "";
     const selectQtd = document.getElementById("selectQuantidade").value;
     
+    // Leitura do campo oculto de preço fixo
+    const precoFixoOculto = parseFloat(document.getElementById("precoFixoOculto").value) || 0;
+    
     let qtd = 500;
     if (selectQtd === "Variavel") {
         qtd = parseInt(document.getElementById("qtdManual").value) || 1;
@@ -254,14 +259,14 @@ function calcularValoresAtuais() {
     let precoModeloBase = modeloEncontrado ? parseFloat(modeloEncontrado.precoBase || 0) : 0;
     let detalhesBase = modeloEncontrado ? modeloEncontrado.nome : 'Nenhum modelo';
     
-    // Varre para encontrar o preço específico atrelado ao campo de cores se for objeto
     let precoCorAdicional = 0;
     let corEncontrada = (database.coresEva || []).find(c => (typeof c === 'object' ? c.nome : c) === coresImpressao);
     if(corEncontrada && typeof corEncontrada === 'object') {
         precoCorAdicional = parseFloat(corEncontrada.preco || 0);
     }
 
-    let custoTotalFinalDoLote = (precoModeloBase + precoCorAdicional) * qtd;
+    // Soma o preço fixo oculto ao total final do lote
+    let custoTotalFinalDoLote = ((precoModeloBase + precoCorAdicional) * qtd) + precoFixoOculto;
     let totalLoteComMargemLucro = custoTotalFinalDoLote; 
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
     
@@ -393,7 +398,7 @@ function abrirImagemNovaAba() {
     startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
     wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
     
-    let nomeAssinaturaVendedor = vendedor || 'Equipe Comercial Comvil';
+    let nomeAssinaturaVendedor = sellerName || 'Equipe Comercial Comvil';
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + nomeAssinaturaVendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
     
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
